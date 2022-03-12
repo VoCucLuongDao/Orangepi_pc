@@ -1,0 +1,9 @@
+B1: clear ~/.ssh if it is exist
+B2: git config --global user.email "huuphuc292@gmail.com"
+B3: git config --global user.email "VoCucLuongDao"
+B4: git config --global user.email "VoCucLuongDao"
+B5: check exist ~/.ssh/id_rsa.pub
+B6: sudo cp *.pub /home/vcld
+B7: get rsa key to copy add new SSH in github
+B8: check ssh -T git@github.com
+B9: git clone git@github.com:VoCucLuongDao/Orangepi_pc.git
