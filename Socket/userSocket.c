@@ -34,11 +34,9 @@ int server_create(int no_port, unsigned int backLog)
      }
 
     timeout = 5*1000*100; //5
- //   memset (&serv_addr, 0, sizeof(serv_addr));
-    sock_sever.serv_addr.sin_port = htons (no_port);                // short, network byte order
+    sock_sever.serv_addr.sin_port = htons (8888);                // short, network byte order
     sock_sever.serv_addr.sin_family = AF_INET;                      // host byte order
     sock_sever.serv_addr.sin_addr.s_addr = INADDR_ANY;              // auto-fill with my IP
-    bzero(&sock_sever.serv_addr, sizeof(sock_sever.serv_addr));     // zero the rest of the struct
 
    ret = bind(sock_sever.sockfd,
               (struct sockaddr *)&sock_sever.serv_addr,
@@ -75,9 +73,7 @@ int server_create(int no_port, unsigned int backLog)
                       (void *) &sock_client[clientCount] );
 
        pthread_join(thread[clientCount],0);
-
        clientCount ++;
-
       }
 
     return  0;
@@ -95,25 +91,24 @@ void * doNetworking(void * ClientDetail)
     struct socket_client* sock_client = (struct socket_client*) ClientDetail;
     int index = sock_client -> index;
     int sockfd = sock_client -> sockfd;
+    sock_client->buff = (char *) malloc(BUF_SIZE);
     printf("Client %d connected.\n",index + 1);
+    char data[1024];
     while(1){
-        sock_client->buff = (char *) malloc(BUF_SIZE);
-        int read = recv(sockfd,sock_client->buff,BUF_SIZE,0);
-        sock_client->buff[read] = '\0';
+        int read_size = recv(sockfd,data,BUF_SIZE,0);
+        data[read_size] = '\0';
+        printf("Server received: %s",data);
         sleep(1);
-        send(sockfd, "Hello da nhan duoc",BUF_SIZE,0);
-
-
     }
 }
 
-int client_create(int no_port)
+int client_create(int no_port, char* ip)
 {
     int ret = 0;
     struct socket_server sock_server;
     struct socket_client sock_client;
 
-    sock_client.sockfd = socket(PF_INET, SOCK_STREAM, 0);
+    sock_client.sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_client.sockfd < 0){
         printf("ERROR opening socket");
         goto done;
@@ -121,7 +116,8 @@ int client_create(int no_port)
 
     sock_server.serv_addr.sin_family = AF_INET;
     sock_server.serv_addr.sin_port = htons(no_port);
-    sock_server.serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    sock_server.serv_addr.sin_addr.s_addr = inet_addr(ip);
+    printf("Connection connecting ............\n");
 
     ret = connect( sock_client.sockfd,
                    (struct sockaddr*) &sock_server.serv_addr,
@@ -130,37 +126,47 @@ int client_create(int no_port)
         printf("Cannot connect client - > server \n");
         goto done;
     }
-
     printf("Connection established ............\n");
 
     pthread_t thread;
     pthread_create(&thread, 0, doRecieving, (void *) &sock_client );
 
-    send(sock_client.sockfd,"The client request to be connected \n", 1024, 0);
-
-    while(1){
-
-        char input[1024];
-        scanf("%s",input);
-        send(sock_client.sockfd, input, 1024, 0);
+    char* message = "GET / HTTP/1.1\r\n\r\n";
+    if( send( sock_client.sockfd , message , strlen(message), 0) < 0)
+    {
+            puts("Send failed");
+            return 1;
     }
+    while(1);
+    return sock_client.sockfd;
 
-    return 0;
  done:
-        return -1;
+    return -1;
 }
 
 void * doRecieving(void * ClientDetail)
+
 {
     struct socket_client* sock_client = (struct socket_client*) ClientDetail;
     int sockfd = sock_client -> sockfd;
-    char data[1024];
+    int read = BUF_SIZE;
+    sock_client->buff = (char *) malloc(BUF_SIZE);
 
     while(1){
-
-            int read = recv(sockfd, data, 1024, 0);
-            data[read] = '\0';
-            printf("%s\n",data);
-
+            memset( sock_client->buff, 0 , read);
+            read= recv(sockfd, sock_client->buff, BUF_SIZE, 0);
+            sock_client->buff[read] = '\0';
         }
+}
+
+int socketSend(int sockfd, char* data, int len){
+    int ret = send(sockfd, data, len, 0);
+    return ret;
+}
+
+int socketClose(int sockfd, int how)
+{
+   int ret =  shutdown(sockfd,how);
+   ret = close(sockfd);
+   return ret;
 }
