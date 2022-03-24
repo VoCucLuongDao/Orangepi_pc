@@ -1,0 +1,14 @@
+Command:
+install:
+	sudo apt-get install device-tree-compiler
+dts to dtsi:
+	sudo dtc -I dts -O dtb -o sun8i-h3-orangepi-pc-plus.dtb sun8i-h3-orangepi-pc-plus.dts
+dts to dtb:
+	sudo dtc -I dts -O dtb -f sun8i-h3-orangepi-pc-plus.dts -o sun8i-h3-orangepi-pc-plus.dtb
+	sudo cp *.dtb /boot/dtb-5.4.65-sunxi/
+	sudo cp *.dtb /boot/dtb/
+dtb to dts:
+	sudo dtc -I dtb -O dts -f sun8i-h3-orangepi-pc-plus.dtb -o sun8i-h3-orangepi-pc-plus.dts
+
+Note:
+- irq numbers compare to devicetree must + 16;

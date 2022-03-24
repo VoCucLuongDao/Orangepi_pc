@@ -34,7 +34,11 @@ int server_create(int no_port, unsigned int backLog)
      }
 
     timeout = 5*1000*100; //5
+<<<<<<< HEAD
+    sock_sever.serv_addr.sin_port = htons (no_port);                // short, network byte order
+=======
     sock_sever.serv_addr.sin_port = htons (8888);                // short, network byte order
+>>>>>>> 816e791a68d8b1dcc56a8a4f250545baa88f0779
     sock_sever.serv_addr.sin_family = inet_addr("127.168.1.25");                      // host byte order
     sock_sever.serv_addr.sin_addr.s_addr = INADDR_ANY;              // auto-fill with my IP
 
