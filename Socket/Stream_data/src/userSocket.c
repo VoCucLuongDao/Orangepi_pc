@@ -1,4 +1,4 @@
-#include "userSocket.h"
+#include "./../inc/userSocket.h"
 
 struct socket_server{
     struct sockaddr_in serv_addr;
@@ -15,7 +15,7 @@ struct socket_client{
     char* buff;
 };
 
-int server_create(int no_port, unsigned int backLog)
+int server_create(int no_port, char* ip, unsigned int backLog)
 {
     int ret = 0;
     int timeout = 0;
@@ -24,81 +24,72 @@ int server_create(int no_port, unsigned int backLog)
     sock_sever.buff = (char *) malloc(BUF_SIZE);
     if(sock_sever.buff == 0){
         printf("no memory \n");
-        goto done;
+        goto exit;
     }
 
     sock_sever.sockfd =  socket(AF_INET, SOCK_STREAM, 0);
     if (sock_sever.sockfd < 0){
         printf("ERROR opening socket");
-        goto done;
+        goto exit;
      }
 
-    timeout = 5*1000*100; //5
-    sock_sever.serv_addr.sin_port = htons (8888);                // short, network byte order
+    sock_sever.serv_addr.sin_port = htons (no_port);                // short, network byte order
     sock_sever.serv_addr.sin_family = AF_INET;                      // host byte order
-    sock_sever.serv_addr.sin_addr.s_addr = INADDR_ANY;              // auto-fill with my IP
+    sock_sever.serv_addr.sin_addr.s_addr = inet_addr(ip);           // auto-fill with my IP
 
-   ret = bind(sock_sever.sockfd,
-              (struct sockaddr *)&sock_sever.serv_addr,
-              sizeof(struct sockaddr) );
+   ret = bind(sock_sever.sockfd, (struct sockaddr *)&sock_sever.serv_addr, sizeof(struct sockaddr));
    if(ret < 0){
        printf("ERROR binding socket");
-       goto done;
+       goto exit;
    }
 
-   ret = listen(sock_sever.sockfd,
-                sock_sever.num_client);
+   ret = listen(sock_sever.sockfd, sock_sever.num_client);
    if(ret < 0){
        printf("ERROR listen socket");
-       goto done;
+       goto exit;
    }
 
    printf("Server started listenting on port %d ...........\n", no_port);
-   struct socket_client* sock_client = (struct socket_client*)
-           malloc(sock_sever.num_client*sizeof (struct socket_client));
+   struct socket_client* sock_client = (struct socket_client*) malloc(sock_sever.num_client*sizeof (struct socket_client));
 
    static int clientCount = 0;
    pthread_t *thread = (pthread_t*) malloc(sock_sever.num_client*sizeof (pthread_t));
 
    while(1){
-
        sock_client[clientCount].index = clientCount;
        sock_client[clientCount].len  = (socklen_t) sizeof(struct sockaddr);
-       sock_client[clientCount].sockfd = accept(sock_sever.sockfd,
-                                                (struct sockaddr*) & sock_client[clientCount].client_addr,
-                                                &sock_client[clientCount].len );
-       pthread_create(&thread[clientCount],
-                      0,
-                      doNetworking,
-                      (void *) &sock_client[clientCount] );
-
-       pthread_join(thread[clientCount],0);
+       sock_client[clientCount].sockfd = accept(sock_sever.sockfd, (struct sockaddr*) &sock_client[clientCount].client_addr, &sock_client[clientCount].len );
+       pthread_create(&thread[clientCount], 0, doNetworking,(void *) &sock_client[clientCount] );
        clientCount ++;
       }
 
     return  0;
 
-done:
-        if(ret < 0){
+exit:
+     if(ret < 0){
             printf("socketclose() failled (err_no = %d) \n", ret);
-        }
+     }
 
      return -1;
 }
-
+  
 void * doNetworking(void * ClientDetail)
 {
-    struct socket_client* sock_client = (struct socket_client*) ClientDetail;
-    int index = sock_client -> index;
-    int sockfd = sock_client -> sockfd;
-    sock_client->buff = (char *) malloc(BUF_SIZE);
-    printf("Client %d connected.\n",index + 1);
-    char data[1024];
-    while(1){
-        int read_size = recv(sockfd,data,BUF_SIZE,0);
-        data[read_size] = '\0';
-        printf("Server received: %s",data);
-        sleep(1);
+	if(pthread_detach(pthread_self())){
+		pthread_exit(0);		
+	} 
+
+	struct socket_client* sock_client = (struct socket_client*) ClientDetail;
+	int index = sock_client -> index;
+	int sockfd = sock_client -> sockfd;
+	sock_client->buff = (char *) malloc(BUF_SIZE);
+	printf("Client %d connected.\n",index + 1);
+	
+	while(1){
+	        int read_size = recv(sockfd, ck_client->buff, BUF_SIZE, 0);
+	        data[read_size] = '\0';
+	        printf("Server received: %s",data);
+	        sleep(1);
     }
 }
 

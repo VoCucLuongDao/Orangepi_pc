@@ -17,7 +17,7 @@
 
 #define BUF_SIZE    (9*1024)
 
-int server_create(int no_port, unsigned int backLog);
+int server_create(int no_port, char* ip, unsigned int backLog);
 int client_create(int no_port, char* ip);
 
 void * doNetworking(void * ClientDetail);
