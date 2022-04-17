@@ -1,1 +1,0 @@
-cmd_/home/vcld/Orangepi_pc/gpio/gpio.ko := ld -r  -EL  --build-id  -T ./scripts/module-common.lds -T ./arch/arm/kernel/module.lds -o /home/vcld/Orangepi_pc/gpio/gpio.ko /home/vcld/Orangepi_pc/gpio/gpio.o /home/vcld/Orangepi_pc/gpio/gpio.mod.o;  true
