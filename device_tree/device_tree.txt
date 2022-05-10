@@ -12,3 +12,6 @@ dtb to dts:
 
 Note:
 - irq numbers compare to devicetree must + 16;
+       	manual	|	device_tree	|	code	|
+Timer 0 |	  50		     18                  66
+uart1   |	  33		      1		  49
